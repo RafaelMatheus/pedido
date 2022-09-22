@@ -1,6 +1,7 @@
 package br.com.lunch.calculator.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UsuarioEntity {
     @Id
     @GeneratedValue(generator = "UUID")
