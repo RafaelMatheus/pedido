@@ -4,4 +4,5 @@ import br.com.lunch.calculator.entity.ItemPedido;
 
 public interface GerarCodigoProvider {
     String gerarCodigo(final ItemPedido itemPedido);
+    String getEmpresa();
 }
