@@ -32,7 +32,7 @@ public class ItemPedido {
     private BigDecimal preco;
     private LocalDateTime dataHora;
     @ManyToOne
-    private Pedido pedido;
+    private PedidoEntity pedido;
     @OneToOne
     private UsuarioEntity usuario;
 

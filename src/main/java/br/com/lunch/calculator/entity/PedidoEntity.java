@@ -18,9 +18,9 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
+@Entity(name = "pedido")
 @Builder
-public class Pedido {
+public class PedidoEntity {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(

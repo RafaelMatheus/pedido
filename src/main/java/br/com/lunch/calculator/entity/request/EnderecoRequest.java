@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
-public class UsuarioRequest {
-    private String nome;
+@Data
+public class EnderecoRequest {
+    private UUID enderecoId;
 }

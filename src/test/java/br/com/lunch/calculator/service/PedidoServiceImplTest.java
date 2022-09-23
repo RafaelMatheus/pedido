@@ -2,9 +2,11 @@ package br.com.lunch.calculator.service;
 
 import br.com.lunch.calculator.entity.EnderecoEntity;
 import br.com.lunch.calculator.entity.ItemPedido;
-import br.com.lunch.calculator.entity.Pedido;
+import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.entity.UsuarioEntity;
+import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
+import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
 import br.com.lunch.calculator.service.impl.PedidoServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,9 @@ public class PedidoServiceImplTest {
     @Mock
     private Set<GerarCodigoProvider> providers;
 
+    @Mock
+    private UsuarioMapper mapper;
+
     @InjectMocks
     private PedidoServiceImpl service;
 
@@ -41,7 +46,7 @@ public class PedidoServiceImplTest {
     public void deveSomarTotalPedidoCompradorUnico() throws Exception {
         when(this.respository.findById(any())).thenReturn(Optional.of(getPedidoCompradorUnico()));
 
-        final var response = this.service.calcularValorPedido(UUID.randomUUID());
+        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID());
 
         assertEquals(new BigDecimal(20), response.getValorTotalCompra());
 
@@ -51,13 +56,15 @@ public class PedidoServiceImplTest {
     public void deveSomarTotalPedidoMultiplosCompradores() throws Exception {
         when(this.respository.findById(any())).thenReturn(Optional.of(getPedidoCompradorMultiplos()));
 
-        final var response = this.service.calcularValorPedido(UUID.randomUUID());
+        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID());
 
-        assertEquals(new BigDecimal(20), response.getValorTotalCompra());
+        assertEquals(new BigDecimal(40), response.getValorTotalCompra());
+        assertEquals(response.getValorTotalPorPessoa().get(0).getPercentualTotal(), new BigDecimal("25.00"));
+        assertEquals(response.getValorTotalPorPessoa().get(1).getPercentualTotal(), new BigDecimal("25.00"));
     }
 
-    private Pedido getPedidoCompradorUnico() {
-        var item1 = ItemPedido.builder()
+    private PedidoEntity getPedidoCompradorUnico() {
+        ItemPedido item1 = ItemPedido.builder()
                 .nome("Hamburger")
                 .preco(BigDecimal.TEN)
                 .dataHora(LocalDateTime.now())
@@ -66,15 +73,15 @@ public class PedidoServiceImplTest {
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
-        return Pedido.builder()
+        return PedidoEntity.builder()
                 .acrescimo(BigDecimal.ZERO)
                 .valorEntrega(BigDecimal.TEN)
                 .itens(Collections.singletonList(item1))
                 .build();
     }
 
-    private Pedido getPedidoCompradorMultiplos() {
-        var item1 = ItemPedido.builder()
+    private PedidoEntity getPedidoCompradorMultiplos() {
+        ItemPedido item1 = ItemPedido.builder()
                 .nome("Hamburger")
                 .preco(BigDecimal.TEN)
                 .dataHora(LocalDateTime.now())
@@ -83,7 +90,7 @@ public class PedidoServiceImplTest {
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
-        var item2 = ItemPedido.builder()
+        ItemPedido item2 = ItemPedido.builder()
                 .nome("Hamburger")
                 .preco(BigDecimal.TEN)
                 .dataHora(LocalDateTime.now())
@@ -92,7 +99,7 @@ public class PedidoServiceImplTest {
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
-        return Pedido.builder()
+        return PedidoEntity.builder()
                 .acrescimo(BigDecimal.TEN)
                 .valorEntrega(BigDecimal.TEN)
                 .itens(Arrays.asList(item1, item2))

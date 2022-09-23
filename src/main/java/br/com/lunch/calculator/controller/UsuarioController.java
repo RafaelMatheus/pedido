@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("usuarios")
@@ -17,7 +19,7 @@ public class UsuarioController {
     private final UsuarioService service;
 
     @PostMapping
-    public ResponseEntity<UsuarioResponse> criarUsuario(@RequestBody final UsuarioRequest usuarioRequest){
+    public ResponseEntity<UsuarioResponse> criarUsuario(@RequestBody @Valid final UsuarioRequest usuarioRequest) {
         this.service.criarUsuario(usuarioRequest);
         return ResponseEntity.ok().build();
     }

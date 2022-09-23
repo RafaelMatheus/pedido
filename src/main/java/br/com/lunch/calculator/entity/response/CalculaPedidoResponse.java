@@ -5,11 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @Builder
 public class CalculaPedidoResponse {
     private BigDecimal valorTotalCompra;
-    private BigDecimal valorTotalPorPessoa;
+    private List<ValorPorPessoaResponse> valorTotalPorPessoa;
 }
