@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @RequestMapping("pedidos")
 @RestController
 @RequiredArgsConstructor
@@ -23,12 +21,11 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<PedidoResponse> createPedido(final @RequestBody PedidoRequest pedido) {
-        service.criarPedido(pedido);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(service.criarPedido(pedido));
     }
 
-    @GetMapping("{pedidoId}/total")
-    public ResponseEntity<CalculaPedidoResponse> getTotalPedido(@PathVariable final UUID pedidoId) throws Exception {
-        return ResponseEntity.ok(this.service.calcularValorPedido(pedidoId));
+    @GetMapping("{codigoPagamento}/total")
+    public ResponseEntity<CalculaPedidoResponse> getTotalPedido(@PathVariable final String codigoPagamento) throws Exception {
+        return ResponseEntity.ok(this.service.calcularValorPedido(codigoPagamento));
     }
 }

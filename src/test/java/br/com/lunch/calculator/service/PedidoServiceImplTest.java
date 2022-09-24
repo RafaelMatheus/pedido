@@ -44,21 +44,23 @@ public class PedidoServiceImplTest {
 
     @Test
     public void deveSomarTotalPedidoCompradorUnico() throws Exception {
-        when(this.respository.findById(any())).thenReturn(Optional.of(getPedidoCompradorUnico()));
+        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorUnico()));
 
-        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID());
+        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
-        assertEquals(new BigDecimal(20), response.getValorTotalCompra());
+        assertEquals(new BigDecimal(30), response.getValorTotalCompra());
+        assertEquals(new BigDecimal(30), response.getValorTotalPorPessoa().get(0).getValor());
+        assertEquals("Rafael", response.getValorTotalPorPessoa().get(0).getUsuario());
 
     }
 
     @Test
     public void deveSomarTotalPedidoMultiplosCompradores() throws Exception {
-        when(this.respository.findById(any())).thenReturn(Optional.of(getPedidoCompradorMultiplos()));
+        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorMultiplos()));
 
-        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID());
+        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
-        assertEquals(new BigDecimal(40), response.getValorTotalCompra());
+        assertEquals(new BigDecimal(58), response.getValorTotalCompra());
         assertEquals(response.getValorTotalPorPessoa().get(0).getPercentualTotal(), new BigDecimal("25.00"));
         assertEquals(response.getValorTotalPorPessoa().get(1).getPercentualTotal(), new BigDecimal("25.00"));
     }
@@ -67,42 +69,52 @@ public class PedidoServiceImplTest {
         ItemPedido item1 = ItemPedido.builder()
                 .nome("Hamburger")
                 .preco(BigDecimal.TEN)
-                .dataHora(LocalDateTime.now())
+                .dataHoraCriacao(LocalDateTime.now())
                 .usuario(UsuarioEntity.builder()
-                        .id(UUID.randomUUID()).nome("Rafael")
+                        .id(UUID.randomUUID().toString()).nome("Rafael")
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
         return PedidoEntity.builder()
-                .acrescimo(BigDecimal.ZERO)
+                .desconto(BigDecimal.TEN)
                 .valorEntrega(BigDecimal.TEN)
                 .itens(Collections.singletonList(item1))
                 .build();
     }
 
     private PedidoEntity getPedidoCompradorMultiplos() {
-        ItemPedido item1 = ItemPedido.builder()
+        final String idRafael = UUID.randomUUID().toString();
+        ItemPedido itemRafael1 = ItemPedido.builder()
                 .nome("Hamburger")
-                .preco(BigDecimal.TEN)
-                .dataHora(LocalDateTime.now())
+                .preco(new BigDecimal(40))
+                .dataHoraCriacao(LocalDateTime.now())
                 .usuario(UsuarioEntity.builder()
-                        .id(UUID.randomUUID()).nome("Rafael")
+                        .id(idRafael).nome("Rafael")
+                        .endereco(EnderecoEntity.builder().build()).build())
+                .build();
+
+        ItemPedido itemRafael2 = ItemPedido.builder()
+                .nome("Sobremesa")
+                .preco(new BigDecimal(2))
+                .dataHoraCriacao(LocalDateTime.now())
+                .usuario(UsuarioEntity.builder()
+                        .id(idRafael).nome("Rafael")
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
         ItemPedido item2 = ItemPedido.builder()
-                .nome("Hamburger")
-                .preco(BigDecimal.TEN)
-                .dataHora(LocalDateTime.now())
+                .nome("Saduiche")
+                .preco(new BigDecimal(8))
+                .dataHoraCriacao(LocalDateTime.now())
                 .usuario(UsuarioEntity.builder()
-                        .id(UUID.randomUUID()).nome("Rafael")
+                        .id(UUID.randomUUID().toString()).nome("Matheus")
                         .endereco(EnderecoEntity.builder().build()).build())
                 .build();
 
         return PedidoEntity.builder()
-                .acrescimo(BigDecimal.TEN)
-                .valorEntrega(BigDecimal.TEN)
-                .itens(Arrays.asList(item1, item2))
+                .desconto(new BigDecimal(20))
+                .valorEntrega(new BigDecimal(8))
+                .itens(Arrays.asList(itemRafael1, itemRafael2, item2))
                 .build();
     }
 }

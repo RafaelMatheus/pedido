@@ -7,7 +7,7 @@ import br.com.lunch.calculator.entity.request.PedidoRequest;
 import java.util.UUID;
 
 public interface PedidoService {
-    CalculaPedidoResponse calcularValorPedido(UUID pedidoId) throws Exception;
+    CalculaPedidoResponse calcularValorPedido(final String codigoPagamento) throws Exception;
 
-    PedidoResponse criarPedido(PedidoRequest pedido);
+    PedidoResponse criarPedido(final PedidoRequest pedido);
 }

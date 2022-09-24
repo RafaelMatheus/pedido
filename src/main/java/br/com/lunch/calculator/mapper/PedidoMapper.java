@@ -4,6 +4,7 @@ import br.com.lunch.calculator.entity.ItemPedido;
 import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.entity.request.ItemPedidoRequest;
 import br.com.lunch.calculator.entity.request.PedidoRequest;
+import br.com.lunch.calculator.entity.response.PedidoResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -14,5 +15,8 @@ public interface PedidoMapper {
     PedidoEntity toEntity(final PedidoRequest pedido);
 
     @Mapping(source = "itemPedido.usuarioId", target = "usuario.id")
-    ItemPedido map (ItemPedidoRequest itemPedido);
+    ItemPedido map (final ItemPedidoRequest itemPedido);
+
+    @Mapping(target = "enderecoEntregaId", source = "enderecoEntrega.id")
+    PedidoResponse toResponse(final PedidoEntity save);
 }

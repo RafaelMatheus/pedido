@@ -8,12 +8,14 @@ import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;
 import br.com.lunch.calculator.entity.response.PedidoResponse;
 import br.com.lunch.calculator.entity.response.ValorPorPessoaResponse;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
+import br.com.lunch.calculator.mapper.PedidoMapper;
 import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
 import br.com.lunch.calculator.service.PedidoService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,41 +28,41 @@ import java.util.stream.Collectors;
 public class PedidoServiceImpl implements PedidoService {
     private final PedidoRespository respository;
     private final UsuarioMapper usuarioMapper;
+    private final PedidoMapper mapper;
     private final Map<String, GerarCodigoProvider> providers;
 
-    public PedidoServiceImpl(final Set<GerarCodigoProvider> providers, final PedidoRespository respository, UsuarioMapper usuarioMapper) {
+    public PedidoServiceImpl(final Set<GerarCodigoProvider> providers, final PedidoRespository respository, UsuarioMapper usuarioMapper, PedidoMapper mapper) {
         this.respository = respository;
         this.providers = generateProviderMap(providers);
         this.usuarioMapper = usuarioMapper;
+        this.mapper = mapper;
     }
 
     @Override
-    public CalculaPedidoResponse calcularValorPedido(final UUID pedidoId) throws Exception {
+    public CalculaPedidoResponse calcularValorPedido(final String codigoPagamento) throws Exception {
         final PedidoEntity pedido = this.respository
-                .findById(pedidoId)
+                .findByCodigoPagamento(codigoPagamento)
                 .orElseThrow(() -> new Exception());
 
-        BigDecimal totalPedido = pedido.getAcrescimo();
 
         BigDecimal totalItensPedidos = pedido.getItens()
                 .stream()
                 .map(ItemPedido::getPreco)
                 .reduce(BigDecimal::add)
-                .orElse(BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO)
+                .add(pedido.getValorEntrega());
 
-        totalPedido = totalPedido.add(pedido.getValorEntrega())
-                .add(totalItensPedidos);
 
         Map<UsuarioEntity, List<ItemPedido>> listaDePedidosPorUsuario = pedido.getItens()
                 .stream()
                 .collect(Collectors.groupingBy(ItemPedido::getUsuario));
 
         CalculaPedidoResponse toResponse = CalculaPedidoResponse.builder()
-                .valorTotalCompra(totalPedido)
+                .valorTotalCompra(totalItensPedidos)
                 .valorTotalPorPessoa(new ArrayList<>())
                 .build();
 
-        BigDecimal finalTotalPedido = totalPedido;
+        BigDecimal finalTotalPedido = totalItensPedidos;
 
         listaDePedidosPorUsuario.forEach((key, value) -> {
 
@@ -73,9 +75,9 @@ public class PedidoServiceImpl implements PedidoService {
 
             ValorPorPessoaResponse valorPorPessoa = ValorPorPessoaResponse
                     .builder()
-                    .usuarioResponse(usuarioMapper.toResponse(key))
+                    .usuario(key.getNome())
                     .percentualTotal(percentualPagarPessoa)
-                    .valor(this.calculaValorPercentual(totalPorPessoa, percentualPagarPessoa))
+                    .valor(this.calculaValorPercentual(finalTotalPedido, percentualPagarPessoa))
                     .build();
 
             toResponse.getValorTotalPorPessoa().add(valorPorPessoa);
@@ -86,15 +88,21 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public PedidoResponse criarPedido(final PedidoRequest pedido) {
-        return null;
+        PedidoEntity entity = this.mapper.toEntity(pedido);
+        entity.setCodigoPagamento(this.gerarIdentificadorPagamento());
+        return this.mapper.toResponse(this.respository.save(entity));
     }
 
-    private BigDecimal calculaPercentual(final BigDecimal valorTotal, final BigDecimal valorAtual){
-        return valorAtual.divide(valorTotal).multiply(new BigDecimal(100));
+    private String gerarIdentificadorPagamento() {
+        return UUID.randomUUID().toString();
+    }
+
+    private BigDecimal calculaPercentual(final BigDecimal valorTotal, final BigDecimal valorAtual) {
+        return valorAtual.divide(valorTotal, MathContext.DECIMAL64).multiply(new BigDecimal(100));
     }
 
     private BigDecimal calculaValorPercentual(final BigDecimal totalPorPessoa, final BigDecimal percentualPagarPessoa) {
-        return totalPorPessoa.divide(percentualPagarPessoa);
+        return totalPorPessoa.multiply(percentualPagarPessoa.divide(new BigDecimal(100)));
     }
 
     private static Map<String, GerarCodigoProvider> generateProviderMap(final Set<GerarCodigoProvider> providers) {
