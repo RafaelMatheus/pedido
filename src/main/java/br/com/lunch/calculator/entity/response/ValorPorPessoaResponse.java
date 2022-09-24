@@ -14,5 +14,6 @@ import java.math.BigDecimal;
 public class ValorPorPessoaResponse {
     private String usuario;
     private BigDecimal valor;
+    private BigDecimal valorDesconto;
     private BigDecimal percentualTotal;
 }

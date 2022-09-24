@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,8 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(ItemPedido::getPreco)
                 .reduce(BigDecimal::add)
                 .orElse(BigDecimal.ZERO)
-                .add(pedido.getValorEntrega());
+                .add(pedido.getValorEntrega())
+                .subtract(new BigDecimal(20));
 
 
         Map<UsuarioEntity, List<ItemPedido>> listaDePedidosPorUsuario = pedido.getItens()
@@ -62,8 +64,6 @@ public class PedidoServiceImpl implements PedidoService {
                 .valorTotalPorPessoa(new ArrayList<>())
                 .build();
 
-        BigDecimal finalTotalPedido = totalItensPedidos;
-
         listaDePedidosPorUsuario.forEach((key, value) -> {
 
             BigDecimal totalPorPessoa = listaDePedidosPorUsuario.get(key).stream()
@@ -71,13 +71,17 @@ public class PedidoServiceImpl implements PedidoService {
                     .reduce(BigDecimal::add)
                     .orElse(BigDecimal.ZERO);
 
-            BigDecimal percentualPagarPessoa = this.calculaPercentual(finalTotalPedido, totalPorPessoa);
+            BigDecimal percentualDescontoPessoa = this.calculaPercentual(totalItensPedidos, pedido.getDesconto());
 
+            BigDecimal percentualPagarPessoa = this.calculaPercentual(totalItensPedidos, totalPorPessoa);
+
+            BigDecimal valotTotal = this.calculaValorPercentual(totalItensPedidos, percentualPagarPessoa);
             ValorPorPessoaResponse valorPorPessoa = ValorPorPessoaResponse
                     .builder()
                     .usuario(key.getNome())
                     .percentualTotal(percentualPagarPessoa)
-                    .valor(this.calculaValorPercentual(finalTotalPedido, percentualPagarPessoa))
+                    .valor(valotTotal)
+                    .valorDesconto(valotTotal.subtract(this.calculaValorPercentual(valotTotal, percentualDescontoPessoa)))
                     .build();
 
             toResponse.getValorTotalPorPessoa().add(valorPorPessoa);
@@ -102,7 +106,9 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     private BigDecimal calculaValorPercentual(final BigDecimal totalPorPessoa, final BigDecimal percentualPagarPessoa) {
-        return totalPorPessoa.multiply(percentualPagarPessoa.divide(new BigDecimal(100)));
+        MathContext mathContext = new MathContext(2);
+        return totalPorPessoa.multiply(percentualPagarPessoa.divide(new BigDecimal(100)))
+                .setScale(2, RoundingMode.HALF_DOWN);
     }
 
     private static Map<String, GerarCodigoProvider> generateProviderMap(final Set<GerarCodigoProvider> providers) {

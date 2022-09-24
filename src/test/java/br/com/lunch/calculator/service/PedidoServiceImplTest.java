@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -60,9 +61,12 @@ public class PedidoServiceImplTest {
 
         final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
-        assertEquals(new BigDecimal(58), response.getValorTotalCompra());
-        assertEquals(response.getValorTotalPorPessoa().get(0).getPercentualTotal(), new BigDecimal("25.00"));
-        assertEquals(response.getValorTotalPorPessoa().get(1).getPercentualTotal(), new BigDecimal("25.00"));
+        assertAll(() -> assertEquals(response.getValorTotalCompra(), new BigDecimal(38)),
+                () -> assertEquals(new BigDecimal("8.00"), response.getValorTotalPorPessoa().get(0).getValor()),
+                () -> assertEquals(new BigDecimal("6.08"), response.getValorTotalPorPessoa().get(0).getValorDesconto()),
+                () -> assertEquals(new BigDecimal("42.00"), response.getValorTotalPorPessoa().get(1).getValor()),
+                () -> assertEquals(new BigDecimal("31.92"), response.getValorTotalPorPessoa().get(1).getPercentualTotal()));
+
     }
 
     private PedidoEntity getPedidoCompradorUnico() {
