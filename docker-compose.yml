@@ -3,6 +3,7 @@ version: '3.1'
 services:
   mysqldb:
     image: mysql
+    container_name: mysql
     restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=root
@@ -11,13 +12,6 @@ services:
       - 3306:3306
     volumes:
       - db:/var/lib/mysql
-
-  pedido:
-    image: pedidos
-    ports:
-      - 8080:8080
-    depends_on:
-      - mysqldb
 
 volumes:
   db:
