@@ -49,10 +49,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<StandardError> MethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException,
-                                                                         HttpServletRequest httpServletRequest) {
+    public ResponseEntity<StandardError> MethodArgumentNotValidException(MethodArgumentNotValidException methodArgumentNotValidException, HttpServletRequest httpServletRequest) {
 
-        log.error("Erro na validação dos campos '{}'", methodArgumentNotValidException);
+        log.error("Erro na validação dos campos", methodArgumentNotValidException);
         ValidationError validationError = ValidationError.builder()
                 .timestamp(System.currentTimeMillis())
                 .status(HttpStatus.BAD_REQUEST.value())

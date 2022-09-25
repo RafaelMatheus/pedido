@@ -11,9 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 @RequestMapping("pedidos")
 @RestController
@@ -23,12 +24,12 @@ public class PedidoController {
     private final PedidoService service;
 
     @PostMapping
-    public ResponseEntity<PedidoResponse> createPedido(final @RequestBody PedidoRequest pedido, @RequestHeader String traceId) {
+    public ResponseEntity<PedidoResponse> createPedido(final @RequestBody @Valid PedidoRequest pedido) {
         return ResponseEntity.ok(service.criarPedido(pedido));
     }
 
     @GetMapping("{codigoPagamento}/total")
-    public ResponseEntity<CalculaPedidoResponse> getTotalPedido(@PathVariable final String codigoPagamento, @RequestHeader String traceId) throws Exception {
+    public ResponseEntity<CalculaPedidoResponse> getTotalPedido(@PathVariable final String codigoPagamento) {
         return ResponseEntity.ok(this.service.calcularValorPedido(codigoPagamento));
     }
 }

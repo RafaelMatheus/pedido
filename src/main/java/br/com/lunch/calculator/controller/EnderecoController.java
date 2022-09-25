@@ -7,9 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
 
 @RequestMapping("enderecos")
 @RestController
@@ -18,7 +19,7 @@ public class EnderecoController {
     private final EnderecoService service;
 
     @PostMapping
-    public ResponseEntity<EnderecoResponse> createEndereco(final @RequestBody EnderecoRequest endereco, @RequestHeader String traceId) {
+    public ResponseEntity<EnderecoResponse> criarEndereco(final @RequestBody @Valid EnderecoRequest endereco) {
         return ResponseEntity.ok(service.criarEndereco(endereco));
     }
 }

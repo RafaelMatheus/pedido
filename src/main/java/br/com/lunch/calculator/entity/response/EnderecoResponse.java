@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EnderecoResponse {
-    private String id;
     private String logradouro;
     private String numero;
 }
