@@ -30,5 +30,5 @@ public class PedidoEntity extends BaseEntity {
     private String linkPagamento;
     @Enumerated(EnumType.STRING)
     private FormaPagamentoEnum formaPagamento;
-    private String codigoPedido;
+    private String codigoPagamento;
 }

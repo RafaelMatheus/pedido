@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.service;
+package br.com.lunch.calculator.test;
 
 import br.com.lunch.calculator.entity.request.EnderecoRequest;
 import br.com.lunch.calculator.entity.response.EnderecoResponse;

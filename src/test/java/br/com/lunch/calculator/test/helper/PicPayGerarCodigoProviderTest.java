@@ -1,4 +1,4 @@
-package helper;
+package br.com.lunch.calculator.test.helper;
 
 import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
@@ -13,6 +13,6 @@ public class PicPayGerarCodigoProviderTest {
     void deveRetornarCodigoGeradoParaPedido() {
         final GerarCodigoProvider provider = new PicPayGerarCodigoProvider();
 
-        assertNotNull(provider.gerarCodigo(PedidoEntity.builder().build()));
+        assertNotNull(provider.gerarLinkPagamento(PedidoEntity.builder().build()));
     }
 }

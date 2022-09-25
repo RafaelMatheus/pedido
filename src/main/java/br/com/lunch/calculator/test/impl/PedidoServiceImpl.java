@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.service.impl;
+package br.com.lunch.calculator.test.impl;
 
 import br.com.lunch.calculator.entity.ItemPedido;
 import br.com.lunch.calculator.entity.PedidoEntity;
@@ -8,11 +8,13 @@ import br.com.lunch.calculator.entity.request.enums.FormaPagamentoEnum;
 import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;
 import br.com.lunch.calculator.entity.response.PedidoResponse;
 import br.com.lunch.calculator.entity.response.ValorPorPessoaResponse;
+import br.com.lunch.calculator.exception.NotFoundException;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
 import br.com.lunch.calculator.mapper.PedidoMapper;
 import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
-import br.com.lunch.calculator.service.PedidoService;
+import br.com.lunch.calculator.test.PedidoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,11 +24,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class PedidoServiceImpl implements PedidoService {
     private final PedidoRespository respository;
     private final UsuarioMapper usuarioMapper;
@@ -41,16 +45,24 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     @Override
-    public CalculaPedidoResponse calcularValorPedido(final String codigoPagamento) throws Exception {
-        final PedidoEntity pedido = this.respository
-                .findByCodigoPagamento(codigoPagamento)
-                .orElseThrow(() -> new Exception());
+    public PedidoResponse criarPedido(final PedidoRequest pedido) {
+        String codigoPedido = this.gerarIdentificadorPagamento();
 
-        BigDecimal totalItensPedidos = pedido.getItens()
-                .stream()
-                .map(ItemPedido::getPreco)
-                .reduce(BigDecimal::add)
-                .orElse(BigDecimal.ZERO);
+        log.info("Cadastrando um pedido com código '[]'", codigoPedido);
+        PedidoEntity entity = this.mapper.toEntity(pedido);
+        entity.setCodigoPagamento(codigoPedido);
+        entity.setLinkPagamento(this.providers.get(pedido.getFormaPagamento()).gerarLinkPagamento(entity));
+        return this.mapper.toResponse(this.respository.save(entity));
+    }
+
+    @Override
+    public CalculaPedidoResponse calcularValorPedido(final String codigoPedido) throws NotFoundException {
+        log.info("Realizando calculo do pedido com código '[]'", codigoPedido);
+        final PedidoEntity pedido = this.respository
+                .findByCodigoPagamento(codigoPedido)
+                .orElseThrow(() -> new NotFoundException(""));
+
+        BigDecimal totalItensPedidos = getTotalItensPedidos(pedido);
 
         Map<UsuarioEntity, List<ItemPedido>> listaDePedidosPorUsuario = pedido.getItens()
                 .stream()
@@ -58,8 +70,9 @@ public class PedidoServiceImpl implements PedidoService {
 
         CalculaPedidoResponse toResponse = CalculaPedidoResponse.builder()
                 .valorTotalCompra(totalItensPedidos)
-                .valorTotalAplicadoDesconto(totalItensPedidos.subtract(new BigDecimal(20)))
                 .valorTotalPorPessoa(new ArrayList<>())
+                .codigoPedido(pedido.getCodigoPagamento())
+                .linkPagamento(pedido.getLinkPagamento())
                 .build();
 
         listaDePedidosPorUsuario.forEach((key, value) -> {
@@ -91,11 +104,12 @@ public class PedidoServiceImpl implements PedidoService {
         return toResponse;
     }
 
-    @Override
-    public PedidoResponse criarPedido(final PedidoRequest pedido) {
-        PedidoEntity entity = this.mapper.toEntity(pedido);
-        entity.setCodigoPedido(this.gerarIdentificadorPagamento());
-        return this.mapper.toResponse(this.respository.save(entity));
+    private static BigDecimal getTotalItensPedidos(PedidoEntity pedido) {
+        return pedido.getItens()
+                .stream()
+                .map(ItemPedido::getPreco)
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
     }
 
     private String gerarIdentificadorPagamento() {
@@ -106,9 +120,11 @@ public class PedidoServiceImpl implements PedidoService {
         return valorAtual.divide(valorTotal, MathContext.DECIMAL64).multiply(new BigDecimal(100));
     }
 
-    private BigDecimal calculaValorPercentual(final BigDecimal totalPorPessoa, final BigDecimal percentualPagarPessoa) {
-        MathContext mathContext = new MathContext(2);
-        return totalPorPessoa.multiply(percentualPagarPessoa.divide(new BigDecimal(100)))
+    private BigDecimal calculaValorPercentual(final BigDecimal valor, final BigDecimal percentual) {
+        if (Objects.isNull(valor)) {
+            return BigDecimal.ZERO;
+        }
+        return valor.multiply(percentual.divide(new BigDecimal(100)))
                 .setScale(2, RoundingMode.HALF_DOWN);
     }
 

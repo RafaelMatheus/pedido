@@ -1,14 +1,15 @@
-package br.com.lunch.calculator.service;
+package br.com.lunch.calculator.test.service;
 
 import br.com.lunch.calculator.entity.EnderecoEntity;
 import br.com.lunch.calculator.entity.ItemPedido;
 import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.entity.UsuarioEntity;
 import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;
+import br.com.lunch.calculator.exception.NotFoundException;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
 import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
-import br.com.lunch.calculator.service.impl.PedidoServiceImpl;
+import br.com.lunch.calculator.test.impl.PedidoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,15 +47,26 @@ public class PedidoServiceImplTest {
 
 
     @Test
-    public void deveLancarExceptionQuandoNaoEncontrarPedidoPorCodigo() throws Exception {
+    public void deveLancarExceptionQuandoNaoEncontrarPedidoPorCodigo() {
         when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.ofNullable(null));
 
-        assertThrows(Exception.class, () -> this.service.calcularValorPedido(UUID.randomUUID().toString()));
+        assertThrows(NotFoundException.class, () -> this.service.calcularValorPedido(UUID.randomUUID().toString()));
     }
 
     @Test
-    public void deveSomarTotalPedidoCompradorUnico() throws Exception {
-        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorUnico()));
+    public void deveSomarTotalPedidoCompradorUnicoSemDescontoETaxaEntrega() {
+        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorUnico(null, null)));
+
+        final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
+
+        assertAll(() -> assertEquals(new BigDecimal(10), response.getValorTotalCompra()),
+                () -> assertEquals(new BigDecimal("10.00"), response.getValorTotalPorPessoa().get(0).getValor()),
+                () -> assertEquals("Rafael", response.getValorTotalPorPessoa().get(0).getUsuario()));
+    }
+
+    @Test
+    public void deveSomarTotalPedidoCompradorUnico() {
+        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorUnico(BigDecimal.TEN, BigDecimal.TEN)));
 
         final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
@@ -70,7 +82,6 @@ public class PedidoServiceImplTest {
         final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
         assertAll(() -> assertEquals(response.getValorTotalCompra(), new BigDecimal(50)),
-                () -> assertEquals(response.getValorTotalAplicadoDesconto(), new BigDecimal(30)),
                 () -> assertNotNull(response.getCodigoPedido()),
                 () -> assertNotNull(response.getLinkPagamento()),
                 () -> assertEquals(new BigDecimal("8.00"), response.getValorTotalPorPessoa().get(0).getValor()),
@@ -81,7 +92,7 @@ public class PedidoServiceImplTest {
 
     }
 
-    private PedidoEntity getPedidoCompradorUnico() {
+    private PedidoEntity getPedidoCompradorUnico(final BigDecimal desconto, final BigDecimal entrega) {
         ItemPedido item1 = ItemPedido.builder().nome("Hamburger")
                 .preco(BigDecimal.TEN)
                 .dataHoraCriacao(LocalDateTime.now())
@@ -89,7 +100,7 @@ public class PedidoServiceImplTest {
                         .nome("Rafael")
                         .endereco(EnderecoEntity.builder().build()).build()).build();
 
-        return PedidoEntity.builder().desconto(BigDecimal.TEN).valorEntrega(BigDecimal.TEN)
+        return PedidoEntity.builder().desconto(desconto).valorEntrega(entrega)
                 .itens(Collections.singletonList(item1)).build();
     }
 
@@ -120,7 +131,7 @@ public class PedidoServiceImplTest {
         return PedidoEntity.builder()
                 .desconto(new BigDecimal(20))
                 .valorEntrega(new BigDecimal(8))
-                .codigoPedido(UUID.randomUUID().toString())
+                .codigoPagamento(UUID.randomUUID().toString())
                 .linkPagamento("link para o pagamento")
                 .itens(Arrays.asList(itemRafael1, itemRafael2, item2)).build();
     }
