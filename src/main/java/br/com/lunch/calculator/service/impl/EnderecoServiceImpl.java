@@ -1,11 +1,11 @@
-package br.com.lunch.calculator.test.impl;
+package br.com.lunch.calculator.service.impl;
 
 import br.com.lunch.calculator.entity.EnderecoEntity;
 import br.com.lunch.calculator.entity.request.EnderecoRequest;
 import br.com.lunch.calculator.entity.response.EnderecoResponse;
 import br.com.lunch.calculator.mapper.EnderecoMapper;
 import br.com.lunch.calculator.repository.EnderecoRepository;
-import br.com.lunch.calculator.test.EnderecoService;
+import br.com.lunch.calculator.service.EnderecoService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -31,4 +31,6 @@ public class PedidoEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private FormaPagamentoEnum formaPagamento;
     private String codigoPagamento;
+    private BigDecimal percentualAcrescimo;
+    private BigDecimal acrescimoReal;
 }

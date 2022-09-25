@@ -1,11 +1,10 @@
-package br.com.lunch.calculator.test.controller;
+package br.com.lunch.calculator.service.controller;
 
 import br.com.lunch.calculator.config.WebMvcConfiguration;
 import br.com.lunch.calculator.controller.EnderecoController;
 import br.com.lunch.calculator.entity.request.EnderecoRequest;
 import br.com.lunch.calculator.entity.response.EnderecoResponse;
-import br.com.lunch.calculator.interceptor.MDCInterceptor;
-import br.com.lunch.calculator.test.EnderecoService;
+import br.com.lunch.calculator.service.EnderecoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -2,7 +2,7 @@ package br.com.lunch.calculator.controller;
 
 import br.com.lunch.calculator.entity.request.UsuarioRequest;
 import br.com.lunch.calculator.entity.response.UsuarioResponse;
-import br.com.lunch.calculator.test.UsuarioService;
+import br.com.lunch.calculator.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

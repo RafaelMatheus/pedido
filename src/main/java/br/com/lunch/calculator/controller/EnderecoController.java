@@ -2,7 +2,7 @@ package br.com.lunch.calculator.controller;
 
 import br.com.lunch.calculator.entity.request.EnderecoRequest;
 import br.com.lunch.calculator.entity.response.EnderecoResponse;
-import br.com.lunch.calculator.test.EnderecoService;
+import br.com.lunch.calculator.service.EnderecoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

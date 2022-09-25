@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<StandardError> saldoInsuficiente(NotFoundException e, HttpServletRequest request) {
         log.error("Objeto não encontrado", e);
         StandardError err = StandardError.builder()
-                .error("Saldo insuficiente.")
+                .error("Objecto não encontrado")
                 .path(request.getRequestURI())
                 .message(e.getMessage())
                 .status(HttpStatus.BAD_REQUEST.value())

@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.test.helper;
+package br.com.lunch.calculator.service.helper;
 
 import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;

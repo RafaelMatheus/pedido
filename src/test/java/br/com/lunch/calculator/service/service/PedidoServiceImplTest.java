@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.test.service;
+package br.com.lunch.calculator.service.service;
 
 import br.com.lunch.calculator.entity.EnderecoEntity;
 import br.com.lunch.calculator.entity.ItemPedido;
@@ -9,7 +9,7 @@ import br.com.lunch.calculator.exception.NotFoundException;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
 import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
-import br.com.lunch.calculator.test.impl.PedidoServiceImpl;
+import br.com.lunch.calculator.service.impl.PedidoServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

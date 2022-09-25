@@ -12,5 +12,12 @@ services:
     volumes:
       - db:/var/lib/mysql
 
+  pedido:
+    image: pedidos
+    ports:
+      - 8080:8080
+    depends_on:
+      - mysqldb
+
 volumes:
   db:

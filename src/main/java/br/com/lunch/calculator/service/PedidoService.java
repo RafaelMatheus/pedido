@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.test;
+package br.com.lunch.calculator.service;
 
 import br.com.lunch.calculator.entity.request.PedidoRequest;
 import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;

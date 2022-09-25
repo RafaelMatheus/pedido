@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PedidoMapper {
 
-    @Mapping(source = "enderecoEntregaId", target = "enderecoEntrega.id")
+    @Mapping(source = "entrega.enderecoEntregaId", target = "enderecoEntrega.id")
     PedidoEntity toEntity(final PedidoRequest pedido);
 
     @Mapping(source = "itemPedido.usuarioId", target = "usuario.id")

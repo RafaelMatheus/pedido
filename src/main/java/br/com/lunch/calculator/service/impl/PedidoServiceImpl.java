@@ -1,4 +1,4 @@
-package br.com.lunch.calculator.test.impl;
+package br.com.lunch.calculator.service.impl;
 
 import br.com.lunch.calculator.entity.ItemPedido;
 import br.com.lunch.calculator.entity.PedidoEntity;
@@ -11,9 +11,8 @@ import br.com.lunch.calculator.entity.response.ValorPorPessoaResponse;
 import br.com.lunch.calculator.exception.NotFoundException;
 import br.com.lunch.calculator.helper.GerarCodigoProvider;
 import br.com.lunch.calculator.mapper.PedidoMapper;
-import br.com.lunch.calculator.mapper.UsuarioMapper;
 import br.com.lunch.calculator.repository.PedidoRespository;
-import br.com.lunch.calculator.test.PedidoService;
+import br.com.lunch.calculator.service.PedidoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -33,14 +32,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PedidoServiceImpl implements PedidoService {
     private final PedidoRespository respository;
-    private final UsuarioMapper usuarioMapper;
     private final PedidoMapper mapper;
     private final Map<FormaPagamentoEnum, GerarCodigoProvider> providers;
 
-    public PedidoServiceImpl(final Set<GerarCodigoProvider> providers, final PedidoRespository respository, UsuarioMapper usuarioMapper, PedidoMapper mapper) {
+    public PedidoServiceImpl(final Set<GerarCodigoProvider> providers, final PedidoRespository respository, final PedidoMapper mapper) {
         this.respository = respository;
         this.providers = generateProviderMap(providers);
-        this.usuarioMapper = usuarioMapper;
         this.mapper = mapper;
     }
 
@@ -48,7 +45,7 @@ public class PedidoServiceImpl implements PedidoService {
     public PedidoResponse criarPedido(final PedidoRequest pedido) {
         String codigoPedido = this.gerarIdentificadorPagamento();
 
-        log.info("Cadastrando um pedido com código '[]'", codigoPedido);
+        log.info("Cadastrando um pedido com código '{}'", codigoPedido);
         PedidoEntity entity = this.mapper.toEntity(pedido);
         entity.setCodigoPagamento(codigoPedido);
         entity.setLinkPagamento(this.providers.get(pedido.getFormaPagamento()).gerarLinkPagamento(entity));
@@ -57,10 +54,10 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Override
     public CalculaPedidoResponse calcularValorPedido(final String codigoPedido) throws NotFoundException {
-        log.info("Realizando calculo do pedido com código '[]'", codigoPedido);
+        log.info("Realizando calculo do pedido com código '{}'", codigoPedido);
         final PedidoEntity pedido = this.respository
                 .findByCodigoPagamento(codigoPedido)
-                .orElseThrow(() -> new NotFoundException(""));
+                .orElseThrow(() -> new NotFoundException());
 
         BigDecimal totalItensPedidos = getTotalItensPedidos(pedido);
 
@@ -89,6 +86,13 @@ public class PedidoServiceImpl implements PedidoService {
             BigDecimal adicaoProposcionalTaxaDeServicoAplicada = this.calculaValorPercentual(pedido.getValorEntrega(), percentualPagarPessoa);
 
             BigDecimal valotTotal = this.calculaValorPercentual(totalItensPedidos, percentualPagarPessoa);
+
+            BigDecimal valorPercentualGarcom = this.calculaValorPercentual(totalItensPedidos, pedido.getPercentualAcrescimo());
+
+            BigDecimal adicaoValorRealProporcional = this.calculaValorPercentual(pedido.getAcrescimoReal(), percentualPagarPessoa);
+
+            valotTotal.add(valorPercentualGarcom.divide(BigDecimal.valueOf(listaDePedidosPorUsuario.size())))
+                    .add(adicaoValorRealProporcional);
 
             ValorPorPessoaResponse valorPorPessoa = ValorPorPessoaResponse
                     .builder()
@@ -121,7 +125,7 @@ public class PedidoServiceImpl implements PedidoService {
     }
 
     private BigDecimal calculaValorPercentual(final BigDecimal valor, final BigDecimal percentual) {
-        if (Objects.isNull(valor)) {
+        if (Objects.isNull(valor) || Objects.isNull(percentual)) {
             return BigDecimal.ZERO;
         }
         return valor.multiply(percentual.divide(new BigDecimal(100)))
