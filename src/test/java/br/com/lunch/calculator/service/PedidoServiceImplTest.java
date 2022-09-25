@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -44,15 +46,21 @@ public class PedidoServiceImplTest {
 
 
     @Test
+    public void deveLancarExceptionQuandoNaoEncontrarPedidoPorCodigo() throws Exception {
+        when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.ofNullable(null));
+
+        assertThrows(Exception.class, () -> this.service.calcularValorPedido(UUID.randomUUID().toString()));
+    }
+
+    @Test
     public void deveSomarTotalPedidoCompradorUnico() throws Exception {
         when(this.respository.findByCodigoPagamento(any())).thenReturn(Optional.of(getPedidoCompradorUnico()));
 
         final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
-        assertEquals(new BigDecimal(30), response.getValorTotalCompra());
-        assertEquals(new BigDecimal(30), response.getValorTotalPorPessoa().get(0).getValor());
-        assertEquals("Rafael", response.getValorTotalPorPessoa().get(0).getUsuario());
-
+        assertAll(() -> assertEquals(new BigDecimal(10), response.getValorTotalCompra()),
+                () -> assertEquals(new BigDecimal("10.00"), response.getValorTotalPorPessoa().get(0).getValor()),
+                () -> assertEquals("Rafael", response.getValorTotalPorPessoa().get(0).getUsuario()));
     }
 
     @Test
@@ -61,64 +69,59 @@ public class PedidoServiceImplTest {
 
         final CalculaPedidoResponse response = this.service.calcularValorPedido(UUID.randomUUID().toString());
 
-        assertAll(() -> assertEquals(response.getValorTotalCompra(), new BigDecimal(38)),
+        assertAll(() -> assertEquals(response.getValorTotalCompra(), new BigDecimal(50)),
+                () -> assertEquals(response.getValorTotalAplicadoDesconto(), new BigDecimal(30)),
+                () -> assertNotNull(response.getCodigoPedido()),
+                () -> assertNotNull(response.getLinkPagamento()),
                 () -> assertEquals(new BigDecimal("8.00"), response.getValorTotalPorPessoa().get(0).getValor()),
                 () -> assertEquals(new BigDecimal("6.08"), response.getValorTotalPorPessoa().get(0).getValorDesconto()),
                 () -> assertEquals(new BigDecimal("42.00"), response.getValorTotalPorPessoa().get(1).getValor()),
-                () -> assertEquals(new BigDecimal("31.92"), response.getValorTotalPorPessoa().get(1).getPercentualTotal()));
+                () -> assertEquals(new BigDecimal("31.92"), response.getValorTotalPorPessoa().get(1).getValorDesconto()),
+                () -> assertEquals(new BigDecimal("31.92"), response.getValorTotalPorPessoa().get(1).getValorDesconto()));
 
     }
 
     private PedidoEntity getPedidoCompradorUnico() {
-        ItemPedido item1 = ItemPedido.builder()
-                .nome("Hamburger")
+        ItemPedido item1 = ItemPedido.builder().nome("Hamburger")
                 .preco(BigDecimal.TEN)
                 .dataHoraCriacao(LocalDateTime.now())
-                .usuario(UsuarioEntity.builder()
-                        .id(UUID.randomUUID().toString()).nome("Rafael")
-                        .endereco(EnderecoEntity.builder().build()).build())
-                .build();
+                .usuario(UsuarioEntity.builder().id(UUID.randomUUID().toString())
+                        .nome("Rafael")
+                        .endereco(EnderecoEntity.builder().build()).build()).build();
 
-        return PedidoEntity.builder()
-                .desconto(BigDecimal.TEN)
-                .valorEntrega(BigDecimal.TEN)
-                .itens(Collections.singletonList(item1))
-                .build();
+        return PedidoEntity.builder().desconto(BigDecimal.TEN).valorEntrega(BigDecimal.TEN)
+                .itens(Collections.singletonList(item1)).build();
     }
 
     private PedidoEntity getPedidoCompradorMultiplos() {
         final String idRafael = UUID.randomUUID().toString();
-        ItemPedido itemRafael1 = ItemPedido.builder()
-                .nome("Hamburger")
+        ItemPedido itemRafael1 = ItemPedido.builder().nome("Hamburger")
                 .preco(new BigDecimal(40))
                 .dataHoraCriacao(LocalDateTime.now())
-                .usuario(UsuarioEntity.builder()
-                        .id(idRafael).nome("Rafael")
-                        .endereco(EnderecoEntity.builder().build()).build())
-                .build();
+                .usuario(UsuarioEntity.builder().id(idRafael)
+                        .nome("Rafael")
+                        .endereco(EnderecoEntity.builder().build()).build()).build();
 
         ItemPedido itemRafael2 = ItemPedido.builder()
-                .nome("Sobremesa")
-                .preco(new BigDecimal(2))
+                .nome("Sobremesa").preco(new BigDecimal(2))
                 .dataHoraCriacao(LocalDateTime.now())
-                .usuario(UsuarioEntity.builder()
-                        .id(idRafael).nome("Rafael")
-                        .endereco(EnderecoEntity.builder().build()).build())
-                .build();
+                .usuario(UsuarioEntity.builder().id(idRafael)
+                        .nome("Rafael")
+                        .endereco(EnderecoEntity.builder().build()).build()).build();
 
         ItemPedido item2 = ItemPedido.builder()
                 .nome("Saduiche")
                 .preco(new BigDecimal(8))
                 .dataHoraCriacao(LocalDateTime.now())
-                .usuario(UsuarioEntity.builder()
-                        .id(UUID.randomUUID().toString()).nome("Matheus")
-                        .endereco(EnderecoEntity.builder().build()).build())
-                .build();
+                .usuario(UsuarioEntity.builder().id(UUID.randomUUID().toString())
+                        .nome("Matheus")
+                        .endereco(EnderecoEntity.builder().build()).build()).build();
 
         return PedidoEntity.builder()
                 .desconto(new BigDecimal(20))
                 .valorEntrega(new BigDecimal(8))
-                .itens(Arrays.asList(itemRafael1, itemRafael2, item2))
-                .build();
+                .codigoPedido(UUID.randomUUID().toString())
+                .linkPagamento("link para o pagamento")
+                .itens(Arrays.asList(itemRafael1, itemRafael2, item2)).build();
     }
 }

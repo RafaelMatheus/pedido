@@ -18,5 +18,5 @@ public interface PedidoMapper {
     ItemPedido map (final ItemPedidoRequest itemPedido);
 
     @Mapping(target = "enderecoEntregaId", source = "enderecoEntrega.id")
-    PedidoResponse toResponse(final PedidoEntity save);
+    PedidoResponse toResponse(final PedidoEntity pedido);
 }

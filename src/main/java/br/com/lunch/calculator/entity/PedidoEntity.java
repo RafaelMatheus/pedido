@@ -1,5 +1,6 @@
 package br.com.lunch.calculator.entity;
 
+import br.com.lunch.calculator.entity.request.enums.FormaPagamentoEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,8 @@ import lombok.experimental.SuperBuilder;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import java.math.BigDecimal;
@@ -25,5 +28,7 @@ public class PedidoEntity extends BaseEntity {
     private BigDecimal valorEntrega;
     private BigDecimal desconto;
     private String linkPagamento;
-    private String codigoPagamento;
+    @Enumerated(EnumType.STRING)
+    private FormaPagamentoEnum formaPagamento;
+    private String codigoPedido;
 }

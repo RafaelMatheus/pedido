@@ -5,14 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import javax.validation.constraints.NotEmpty;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class EnderecoRequest {
     @ApiModelProperty(position = 1, example = "av das rosas")
+    @NotEmpty
     private String logradouro;
     @ApiModelProperty(position = 2, example = "104A")
+    @NotEmpty
     private String numero;
 }

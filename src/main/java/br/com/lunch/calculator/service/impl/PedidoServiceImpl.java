@@ -4,6 +4,7 @@ import br.com.lunch.calculator.entity.ItemPedido;
 import br.com.lunch.calculator.entity.PedidoEntity;
 import br.com.lunch.calculator.entity.UsuarioEntity;
 import br.com.lunch.calculator.entity.request.PedidoRequest;
+import br.com.lunch.calculator.entity.request.enums.FormaPagamentoEnum;
 import br.com.lunch.calculator.entity.response.CalculaPedidoResponse;
 import br.com.lunch.calculator.entity.response.PedidoResponse;
 import br.com.lunch.calculator.entity.response.ValorPorPessoaResponse;
@@ -30,7 +31,7 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRespository respository;
     private final UsuarioMapper usuarioMapper;
     private final PedidoMapper mapper;
-    private final Map<String, GerarCodigoProvider> providers;
+    private final Map<FormaPagamentoEnum, GerarCodigoProvider> providers;
 
     public PedidoServiceImpl(final Set<GerarCodigoProvider> providers, final PedidoRespository respository, UsuarioMapper usuarioMapper, PedidoMapper mapper) {
         this.respository = respository;
@@ -45,15 +46,11 @@ public class PedidoServiceImpl implements PedidoService {
                 .findByCodigoPagamento(codigoPagamento)
                 .orElseThrow(() -> new Exception());
 
-
         BigDecimal totalItensPedidos = pedido.getItens()
                 .stream()
                 .map(ItemPedido::getPreco)
                 .reduce(BigDecimal::add)
-                .orElse(BigDecimal.ZERO)
-                .add(pedido.getValorEntrega())
-                .subtract(new BigDecimal(20));
-
+                .orElse(BigDecimal.ZERO);
 
         Map<UsuarioEntity, List<ItemPedido>> listaDePedidosPorUsuario = pedido.getItens()
                 .stream()
@@ -61,6 +58,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         CalculaPedidoResponse toResponse = CalculaPedidoResponse.builder()
                 .valorTotalCompra(totalItensPedidos)
+                .valorTotalAplicadoDesconto(totalItensPedidos.subtract(new BigDecimal(20)))
                 .valorTotalPorPessoa(new ArrayList<>())
                 .build();
 
@@ -71,17 +69,20 @@ public class PedidoServiceImpl implements PedidoService {
                     .reduce(BigDecimal::add)
                     .orElse(BigDecimal.ZERO);
 
-            BigDecimal percentualDescontoPessoa = this.calculaPercentual(totalItensPedidos, pedido.getDesconto());
-
             BigDecimal percentualPagarPessoa = this.calculaPercentual(totalItensPedidos, totalPorPessoa);
 
+            BigDecimal descontoAplicadoProporcional = this.calculaValorPercentual(pedido.getDesconto(), percentualPagarPessoa);
+
+            BigDecimal adicaoProposcionalTaxaDeServicoAplicada = this.calculaValorPercentual(pedido.getValorEntrega(), percentualPagarPessoa);
+
             BigDecimal valotTotal = this.calculaValorPercentual(totalItensPedidos, percentualPagarPessoa);
+
             ValorPorPessoaResponse valorPorPessoa = ValorPorPessoaResponse
                     .builder()
                     .usuario(key.getNome())
                     .percentualTotal(percentualPagarPessoa)
+                    .valorDesconto(valotTotal.add(adicaoProposcionalTaxaDeServicoAplicada).subtract(descontoAplicadoProporcional))
                     .valor(valotTotal)
-                    .valorDesconto(valotTotal.subtract(this.calculaValorPercentual(valotTotal, percentualDescontoPessoa)))
                     .build();
 
             toResponse.getValorTotalPorPessoa().add(valorPorPessoa);
@@ -93,7 +94,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     public PedidoResponse criarPedido(final PedidoRequest pedido) {
         PedidoEntity entity = this.mapper.toEntity(pedido);
-        entity.setCodigoPagamento(this.gerarIdentificadorPagamento());
+        entity.setCodigoPedido(this.gerarIdentificadorPagamento());
         return this.mapper.toResponse(this.respository.save(entity));
     }
 
@@ -111,8 +112,8 @@ public class PedidoServiceImpl implements PedidoService {
                 .setScale(2, RoundingMode.HALF_DOWN);
     }
 
-    private static Map<String, GerarCodigoProvider> generateProviderMap(final Set<GerarCodigoProvider> providers) {
-        Map<String, GerarCodigoProvider> providerMap = new HashMap<>();
+    private static Map<FormaPagamentoEnum, GerarCodigoProvider> generateProviderMap(final Set<GerarCodigoProvider> providers) {
+        Map<FormaPagamentoEnum, GerarCodigoProvider> providerMap = new HashMap<>();
         providers.stream().forEach(provider -> providerMap.put(provider.getEmpresa(), provider));
         return providerMap;
     }
